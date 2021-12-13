@@ -6,7 +6,7 @@
 class AbstractFactory {
 public:
     virtual ~AbstractFactory() = default;
-    virtual Worker createWorker() = 0;
+    virtual Worker *createWorker() = 0;
 };
 
 
