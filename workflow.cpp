@@ -1,6 +1,6 @@
 #include "workflow.h"
 
-Workflow::Workflow(const std::string &configFileName) {
+void Workflow::init(const std::string &configFileName) {
     std::string str;
     std::ifstream input(configFileName);
     getline(input, str);

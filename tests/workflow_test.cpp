@@ -3,6 +3,7 @@
 #include <iostream>
 
 TEST_CASE("reading config file", "[read-config]") {
-    Workflow flow{"../tests/config0.txt"};
+    Workflow flow;
+    flow.init("../tests/config0.txt");
     flow.work();
 }

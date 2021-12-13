@@ -32,13 +32,13 @@ class Workflow {
     };
 
     Command *commands = nullptr;
-    int commandsCount;
+    int commandsCount = 0;
     int *workOrder = nullptr;
-    int workCount;
+    int workCount = 0;
     Buffer buffer;
 
 public:
-    explicit Workflow(const std::string &configFileName);
+    explicit Workflow() = default;
     ~Workflow();
 
 private:
@@ -46,6 +46,7 @@ private:
 
 public:
     void work();
+    void init(const std::string &filename);
 };
 
 #endif //WORKFLOW_WORKFLOW_H
