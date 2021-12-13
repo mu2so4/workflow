@@ -120,6 +120,19 @@ Workflow::Workflow(const std::string &configFileName) {
     workOrder = res.first;
     res.first = nullptr;
     workCount = res.second;
+
+    /*
+    std::sort(commands, commands + commandsCount);
+    for(int index = 0; index < commandsCount - 1; index++) {
+        if(commands[index].id == commands[index + 1].id) {
+            int notId = commands[index].id;
+            delete[] commands;
+            delete[] workOrder;
+            throw ConfigFileFormatException(
+                    "two and more occurrences of id " + std::to_string(notId) + "\n");
+        }
+    }
+     */
 }
 
 Workflow::~Workflow() {
@@ -146,6 +159,11 @@ void Workflow::runBlock(int id) {
 void Workflow::work() {
     for(int index = 0; index < workCount; index++) {
         runBlock(workOrder[index]);
+    }
+    if(!buffer.isSaved) {
+        delete[] buffer.data;
+        buffer.data = nullptr;
+        throw ConfigFileFormatException("filewrite missed\n");
     }
 }
 
