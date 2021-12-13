@@ -2,10 +2,12 @@
 #define WORKFLOW_WORKER_H
 
 #include <string>
+#include "buffer.h"
+#include "exceptions.h"
 
 class Worker {
 public:
-    virtual void run(const std::string &params) const = 0;
+    virtual void run(const std::string &params, Buffer &buffer) const = 0;
     virtual ~Worker() = default;
 };
 
