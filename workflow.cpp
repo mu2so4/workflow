@@ -1,6 +1,7 @@
 #include "workflow.h"
 
 void Workflow::init(const std::string &configFileName) {
+    buffer.isSaved = buffer.isLoaded = buffer.isDumped = false;
     std::string str;
     std::ifstream input(configFileName);
     getline(input, str);
