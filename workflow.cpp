@@ -120,6 +120,7 @@ void Workflow::init(const std::string &configFileName) {
     workOrder = res.first;
     res.first = nullptr;
     workCount = res.second;
+    isInitiated = true;
 
     /*
     std::sort(commands, commands + commandsCount);
@@ -157,6 +158,9 @@ void Workflow::runBlock(int id) {
 
 
 void Workflow::work() {
+    if(!isInitiated) {
+        throw IllegalStateException("attempt to work() without init");
+    }
     for(int index = 0; index < workCount; index++) {
         runBlock(workOrder[index]);
     }
@@ -165,6 +169,7 @@ void Workflow::work() {
         buffer.data = nullptr;
         throw ConfigFileFormatException("filewrite missed\n");
     }
+    isInitiated = false;
 }
 
 

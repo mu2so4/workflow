@@ -36,6 +36,7 @@ class Workflow {
     int *workOrder = nullptr;
     int workCount = 0;
     Buffer buffer;
+    bool isInitiated = false;
 
 public:
     explicit Workflow() = default;
