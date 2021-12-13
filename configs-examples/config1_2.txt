@@ -1,0 +1,6 @@
+desc
+1 = readfile file4.txt
+999 = writefile bla.txt
+17 = grep on
+csed
+17 -> 1 -> 999

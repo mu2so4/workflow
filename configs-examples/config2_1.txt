@@ -1,0 +1,9 @@
+desc
+1 = readfile file4.txt
+999 = writefile out.txt
+14 = replace s cc
+17 = grep ion
+11 = dump med.txt
+16 = sort
+csed
+1 -> 14 -> 17 -> 11 -> 16

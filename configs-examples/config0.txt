@@ -1,0 +1,7 @@
+desc
+1 = readfile input.txt
+16 = writefile output.txt
+6 = replace c c++
+4 = sort
+csed
+1 -> 6 -> 4 -> 16

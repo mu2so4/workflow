@@ -1,0 +1,7 @@
+desc
+1 = readfile file4.txt
+999 = writefile filter.txt
+17 = grep ion
+0 = sort
+csed
+1 -> 17 -> 0 -> 999
