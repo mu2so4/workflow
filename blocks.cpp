@@ -189,6 +189,7 @@ void Replacer::run(const std::string &params, Buffer &buffer) const {
         for(unsigned long long pos = buffer.data[index].find(from); pos != std::string::npos;
         pos = buffer.data[index].find(from, pos)) {
             buffer.data[index].replace(pos, spaces[1] - spaces[0] - 1, to);
+            pos += to.length();
         }
         //if(buffer.data[index] == from)
         //    buffer.data[index] = to;
