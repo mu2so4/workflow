@@ -4,33 +4,61 @@
 #include "worker.h"
 
 class FileReader: public Worker {
+    std::string inputFile;
 public:
-    void run(const std::string &params, Buffer &buffer) const override;
+    explicit FileReader(std::string filename):
+            inputFile(std::move(filename)) {}
+
+    std::string name() override;
+    void run(std::vector<std::string> &buffer) const override;
 };
 
 class FileDumper: public Worker {
+    std::string outputFile;
 public:
-    void run(const std::string &params, Buffer &buffer) const override;
+    explicit FileDumper(std::string filename):
+            outputFile(std::move(filename)) {}
+
+    std::string name() override;
+    void run(std::vector<std::string> &buffer) const override;
 };
 
 class FileWriter: public Worker {
+    std::string outputFile;
 public:
-    void run(const std::string &params, Buffer &buffer) const override;
+    explicit FileWriter(std::string filename):
+            outputFile(std::move(filename)) {}
+
+    std::string name() override;
+    void run(std::vector<std::string> &buffer) const override;
 };
 
 class Sorter: public Worker {
 public:
-    void run(const std::string &params, Buffer &buffer) const override;
+    std::string name() override;
+    void run(std::vector<std::string> &buffer) const override;
 };
 
 class Grepper: public Worker {
+    std::string condition;
 public:
-    void run(const std::string &params, Buffer &buffer) const override;
+    explicit Grepper(std::string cond):
+            condition(std::move(cond)) {}
+
+    std::string name() override;
+    void run(std::vector<std::string> &buffer) const override;
 };
 
 class Replacer: public Worker {
+    std::string oldWord;
+    std::string newWord;
 public:
-    void run(const std::string &params, Buffer &buffer) const override;
+    Replacer(std::string from, std::string to):
+            oldWord(std::move(from)),
+            newWord(std::move(to)) {}
+
+    std::string name() override;
+    void run(std::vector<std::string> &buffer) const override;
 };
 
 #endif //WORKFLOW_BLOCKS_H

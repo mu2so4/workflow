@@ -75,6 +75,23 @@ public:
     }
 };
 
+class CommandCompatibilityException: public std::exception {
+    const std::string message;
+
+public:
+    explicit CommandCompatibilityException(std::string message):
+            message(std::move(message)) {}
+
+    ~CommandCompatibilityException() override = default;
+
+    CommandCompatibilityException(const CommandCompatibilityException &otherErr) noexcept:
+            message(otherErr.message) {}
+
+    const char *what() const noexcept override {
+        return message.c_str();
+    }
+};
+
 class ConfigFileFormatException: public std::exception {
     const std::string message;
 

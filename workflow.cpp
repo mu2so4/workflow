@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "workflow.h"
 
 void Workflow::init(const std::string &configFileName) {
@@ -10,189 +11,102 @@ void Workflow::init(const std::string &configFileName) {
     if(str != "desc") {
         throw ConfigFileFormatException("\"desc\" header not found\n");
     }
-    auto *cmd = new DynamicArray<Command>{};
+
     for(getline(input, str); str != "csed" && !str.empty(); getline(input, str)) {
-        size_t spaces[3];
-        spaces[0] = str.find(' ');
-        spaces[1] = str.find(' ', spaces[0] + 1);
-        spaces[2] = str.find(' ', spaces[1] + 1);
-        if(spaces[0] == std::string::npos || spaces[1] == std::string::npos) {
-            delete cmd;
+        auto firstSpacePos = str.find(' '),
+            secondSpacePos = str.find(' ', firstSpacePos + 1);
+        if(firstSpacePos == std::string::npos || secondSpacePos == std::string::npos) {
             throw ConfigFileFormatException("too few data for command\n");
         }
-        if(str.substr(spaces[0] + 1, spaces[1] - spaces[0] - 1) != "=") {
-            delete cmd;
+        if(str.at(firstSpacePos + 1) != '=') {
             throw ConfigFileFormatException("expected operator \"=\"\n");
         }
-
         char *chr;
         int id = (int) std::strtol(str.c_str(), &chr, 10);
-        std::string instruction = str.substr(spaces[1] + 1);
+        std::string instruction = str.substr(secondSpacePos + 1);
         if(*chr != ' ') {
-            delete cmd;
             throw ConfigFileFormatException("failed to bind id to int\n");
         }
-        std::string inst = str.substr(spaces[1] + 1, spaces[2] - spaces[1] - 1);
-
-        AbstractFactory *creator = nullptr;
-        if(inst == "readfile")
-            creator = new ReaderCreator();
-        else if(inst == "writefile")
-            creator = new WriterCreator();
-        else if(inst == "dump")
-            creator = new DumperCreator();
-        else if(inst == "sort")
-            creator = new SorterCreator();
-        else if(inst == "replace")
-            creator = new ReplacerCreator();
-        else if(inst == "grep")
-            creator = new GrepCreator();
-        else {
-            delete cmd;
-            throw ConfigFileFormatException("unexpected command " + inst + "\n");
+        if(commands.count(id) != 0) {
+            throw ConfigFileFormatException("redefinition of id=" + std::to_string(id) + "\n");
         }
+        Worker *worker = WorkerFactory::instance().createWorker(instruction);
 
-        Command temp;
-        temp = Command{id, instruction, creator->createWorker()};
-        cmd->pushBack(temp);
-        temp.worker = nullptr;
-        delete creator;
+        commands.emplace(std::make_pair(id, worker));
     }
     if(str.empty()) {
-        delete cmd;
         throw ConfigFileFormatException("\"csed\" footer not found\n");
     }
-    std::pair<Command*, int> command = cmd->exportData();
-    delete cmd;
-    commands = command.first;
-    command.first = nullptr;
-    commandsCount = command.second;
 
-    auto *works = new DynamicArray<int>{};
     int num;
     input >> num;
     if(input.eof()) {
-        delete works;
-        delete[] commands;
         throw ConfigFileFormatException("work order not found\n");
     }
     if(input.fail()) {
-        delete works;
-        delete[] commands;
         throw ConfigFileFormatException("couldn't bind to int\n");
     }
-    works->pushBack(num);
+    workOrder.push_back(num);
 
     for(;;) {
         getline(input, str, ' ');
         getline(input, str, ' ');
         if(input.eof()) {
             if(!str.empty() && str != "\n") {
-                delete works;
-                delete[] commands;
                 throw ConfigFileFormatException("garbage at the end\n");
             }
             break;
         }
         if(str != "->") {
-            delete works;
-            delete[] commands;
             throw ConfigFileFormatException("expected operator \"->\"\n");
         }
 
         input >> num;
         if(input.eof()) {
-            delete works;
-            delete[] commands;
             throw ConfigFileFormatException("id not found\n");
         }
         if(input.fail()) {
-            delete works;
-            delete[] commands;
             throw ConfigFileFormatException("couldn't bind to int\n");
         }
-        works->pushBack(num);
+        workOrder.push_back(num);
     }
-
     input.close();
-    std::pair<int*, int> res = works->exportData();
-    delete works;
-    workOrder = res.first;
-    res.first = nullptr;
-    workCount = res.second;
+
+    int pos = 0;
+    for(auto &iter: workOrder) {
+        Worker *worker;
+        try {
+            worker = commands.at(iter);
+        }
+        catch(std::out_of_range &err) {
+            throw ConfigFileFormatException("id " + std::to_string(iter) + " not found\n");
+        }
+        if((pos == 0) != (worker->name() == "FileReader")) {
+            throw CommandCompatibilityException("wrong place for readfile, pos " + std::to_string(pos) + " \n");
+        }
+        if((pos == workOrder.size() - 1) != (worker->name() == "FileWriter")) {
+            throw CommandCompatibilityException("wrong place for writefile, pos " + std::to_string(pos) + " \n");
+        }
+        pos++;
+    }
     isInitiated = true;
-
-    /*
-    std::sort(commands, commands + commandsCount);
-    for(int index = 0; index < commandsCount - 1; index++) {
-        if(commands[index].id == commands[index + 1].id) {
-            int notId = commands[index].id;
-            delete[] commands;
-            delete[] workOrder;
-            throw ConfigFileFormatException(
-                    "two and more occurrences of id " + std::to_string(notId) + "\n");
-        }
-    }
-     */
-}
-
-Workflow::~Workflow() {
-    delete[] commands;
-    delete[] workOrder;
-}
-
-void Workflow::runBlock(int id) {
-    int pos = -1;
-    for(int index = 0; index < commandsCount; index++) {
-        if(commands[index].id == id) {
-            pos = index;
-            break;
-        }
-    }
-    if(pos == -1) {
-        throw CommandNotFoundException("id " + std::to_string(id) + " not found\n");
-    }
-
-    commands[pos].worker->run(commands[pos].instruction, buffer);
 }
 
 
 void Workflow::work() {
     if(!isInitiated) {
-        throw IllegalStateException("attempt to work() without init");
+        throw IllegalStateException("attempt to work() without init\n");
     }
-    for(int index = 0; index < workCount; index++) {
-        runBlock(workOrder[index]);
-    }
-    if(!buffer.isSaved) {
-        delete[] buffer.data;
-        buffer.data = nullptr;
-        throw ConfigFileFormatException("filewrite missed\n");
+    for(int index : workOrder) {
+        commands[index]->run(buffer);
     }
     isInitiated = false;
 }
 
-
-
-
-Workflow::Command &Workflow::Command::operator=(const Workflow::Command &otherCmd) {
-    if(&otherCmd != this) {
-        delete worker;
-        worker = otherCmd.worker;
-        instruction = otherCmd.instruction;
-        id = otherCmd.id;
+Workflow::~Workflow() {
+    for(auto &iter: commands) {
+        delete iter.second;
+        iter.second = nullptr;
     }
-    return *this;
+    commands.clear();
 }
-
-Workflow::Command &Workflow::Command::operator=(Workflow::Command &&otherCmd) noexcept {
-    if(&otherCmd != this) {
-        delete worker;
-        worker = otherCmd.worker;
-        otherCmd.worker = nullptr;
-        instruction = otherCmd.instruction;
-        id = otherCmd.id;
-    }
-    return *this;
-}
-

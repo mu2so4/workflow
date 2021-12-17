@@ -3,47 +3,23 @@
 
 #include <string>
 #include <fstream>
+#include <vector>
 #include "block_creators.h"
-#include "dynamic_array.h"
+#include "factory.h"
+#include <map>
 #include "exceptions.h"
-#include "buffer.h"
 #include "worker.h"
 
 class Workflow {
-    struct Command {
-        int id = 0;
-        std::string instruction;
-        Worker *worker = nullptr;
 
-        Command() = default;
-
-        Command(int pos, std::string &command, Worker *workerPtr):
-        id(pos),
-        instruction(command),
-        worker(workerPtr) {}
-
-        Command &operator=(const Command &otherCmd);
-
-        Command &operator=(Command &&otherCmd) noexcept;
-
-        ~Command() {
-            delete worker;
-        }
-    };
-
-    Command *commands = nullptr;
-    int commandsCount = 0;
-    int *workOrder = nullptr;
-    int workCount = 0;
-    Buffer buffer;
+    std::map<int, Worker*> commands;
+    std::vector<int> workOrder;
+    std::vector<std::string> buffer;
     bool isInitiated = false;
 
 public:
-    explicit Workflow() = default;
+    Workflow() = default;
     ~Workflow();
-
-private:
-    void runBlock(int id);
 
 public:
     void work();
