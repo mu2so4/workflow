@@ -1,29 +1,24 @@
 #ifndef WORKFLOW_WORKFLOW_H
 #define WORKFLOW_WORKFLOW_H
 
-#include <string>
 #include <fstream>
 #include <vector>
-#include "block_creators.h"
-#include "factory.h"
 #include <map>
-#include "exceptions.h"
-#include "worker.h"
+#include <memory>
+#include "factory.h"
 
 class Workflow {
 
-    std::map<int, Worker*> commands;
+    std::map<int, std::unique_ptr<Worker>> commands;
     std::vector<int> workOrder;
     std::vector<std::string> buffer;
-    bool isInitiated = false;
 
 public:
     Workflow() = default;
-    ~Workflow();
+    ~Workflow() = default;
 
 public:
-    void work();
-    void init(const std::string &filename);
+    void execute(const std::string &configFileName);
 };
 
 #endif //WORKFLOW_WORKFLOW_H

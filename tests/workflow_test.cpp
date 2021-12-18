@@ -4,6 +4,6 @@
 
 TEST_CASE("reading config file", "[read-config]") {
     Workflow flow;
-    flow.init("../tests/config0.txt");
+    flow.execute("../tests/config0.txt");
     flow.work();
 }

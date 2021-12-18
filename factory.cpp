@@ -12,7 +12,7 @@ WorkerFactory::WorkerFactory() {
 void WorkerFactory::registerMaker(const std::string &key, WorkerCreator *creator) {
     if(creators.find(key) != creators.end())
         throw ConfigFileFormatException("operator with the key \"" + key + "\" already exists\n");
-    creators.insert(std::pair<std::string, WorkerCreator*>(key, creator));
+    creators.emplace(std::make_pair(key, creator));
 }
 
 Worker *WorkerFactory::createWorker(const std::string &params) const {
@@ -30,10 +30,5 @@ WorkerFactory &WorkerFactory::instance() {
     static WorkerFactory factory;
 
     return factory;
-}
-
-WorkerFactory::~WorkerFactory() {
-    for(auto &iter: creators)
-        delete iter.second;
 }
 

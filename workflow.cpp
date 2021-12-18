@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "workflow.h"
 
-void Workflow::init(const std::string &configFileName) {
+void Workflow::execute(const std::string &configFileName) {
     std::string str;
     std::ifstream input(configFileName);
     getline(input, str);
@@ -76,7 +76,7 @@ void Workflow::init(const std::string &configFileName) {
     for(auto &iter: workOrder) {
         Worker *worker;
         try {
-            worker = commands.at(iter);
+            worker = commands.at(iter).get();
         }
         catch(std::out_of_range &err) {
             throw ConfigFileFormatException("id " + std::to_string(iter) + " not found\n");
@@ -89,24 +89,8 @@ void Workflow::init(const std::string &configFileName) {
         }
         pos++;
     }
-    isInitiated = true;
-}
 
-
-void Workflow::work() {
-    if(!isInitiated) {
-        throw IllegalStateException("attempt to work() without init\n");
-    }
     for(int index : workOrder) {
         commands[index]->run(buffer);
     }
-    isInitiated = false;
-}
-
-Workflow::~Workflow() {
-    for(auto &iter: commands) {
-        delete iter.second;
-        iter.second = nullptr;
-    }
-    commands.clear();
 }
