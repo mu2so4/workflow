@@ -2,6 +2,9 @@
 #include "workflow.h"
 
 void Workflow::execute(const std::string &configFileName) {
+    commands.clear();
+    workOrder.clear();
+
     std::string str;
     std::ifstream input(configFileName);
     getline(input, str);
